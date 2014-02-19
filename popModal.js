@@ -1,32 +1,31 @@
 function popModal(elem, html, params, okFun, cancelFun, onLoad, onClose) {
+  var _defaults = {
+    placement: 'bottomLeft',
+    showCloseBut: true,
+    overflowContent: true,
+    okFun: function() {return true;},
+    cancelFun: function() {},
+    onLoad: function() {},
+    onClose: function() {}
+  };
+  $.extend(_defaults, params);
+  
+  var isFixed, overflowContentClass, closeBut;  
+
   var modal = elem.next('div');
   var modalClass = 'popModal';
-  var placement = 'bottomLeft';
-  var showCloseBut = true;
-  var overflowContent = true;
-  var popModalOpen = 'popModalOpen'; 
+  var popModalOpen = 'popModalOpen';
 
-  if (params != undefined) {
-    if (params.placement != undefined) {
-      placement = params.placement;
-    }
-    if (params.showCloseBut != undefined) {
-      showCloseBut = params.showCloseBut;
-    }
-    if (params.overflowContent != undefined) {
-      overflowContent = params.overflowContent;
-    }
-  }
-
-  if (showCloseBut) {
-    var closeBut = $('<button type="button" class="close">&times;</button>');
+  
+  if (_defaults.showCloseBut) {
+    closeBut = $('<button type="button" class="close">&times;</button>');
   } else {
-    var closeBut = '';
+    closeBut = '';
   }
-  if (overflowContent) {
-    var overflowContentClass = 'popModal_contentOverflow';
+  if (_defaults.overflowContent) {
+    overflowContentClass = 'popModal_contentOverflow';
   } else {
-    var overflowContentClass = '';
+    overflowContentClass = '';
   }
 
   if (modal.hasClass(modalClass)) {
@@ -36,13 +35,13 @@ function popModal(elem, html, params, okFun, cancelFun, onLoad, onClose) {
     $('.' + modalClass).remove();
 
     if (elem.css('position') == 'fixed') {
-      var isFixed = 'position:fixed;';
+      isFixed = 'position:fixed;';
     } else {
-      var isFixed = '';
+      isFixed = '';
     }
     var getTop = 'top:' + eval(elem.position().top + parseInt(elem.css('marginTop')) + elem.outerHeight() + 10) + 'px';
 
-    var tooltipContainer = $('<div class="' + modalClass + ' ' + placement + '" style="' + isFixed + getTop + '"></div>');
+    var tooltipContainer = $('<div class="' + modalClass + ' ' + _defaults.placement + '" style="' + isFixed + getTop + '"></div>');
     var tooltipContent = $('<div class="' + modalClass + '_content ' + overflowContentClass + '"></div>');
     tooltipContainer.append(closeBut, tooltipContent);
     tooltipContent.append(html);
@@ -52,22 +51,26 @@ function popModal(elem, html, params, okFun, cancelFun, onLoad, onClose) {
 
     if (onLoad && $.isFunction(onLoad)) {
       onLoad();
+    } else {
+      _defaults.onLoad();
     }
 
     $('.' + modalClass).on('destroyed', function () {
       if (onClose && $.isFunction(onClose)) {
         onClose();
+      } else {
+        _defaults.onClose();
       }
     });
 
-    if (placement == 'bottomLeft') {
+    if (_defaults.placement == 'bottomLeft') {
       $('.' + modalClass).css({left: elem.position().left + parseInt(elem.css('marginRight')) + 'px'});
-    } else if (placement == 'bottomRight') {
+    } else if (_defaults.placement == 'bottomRight') {
       $('.' + modalClass).css({left: elem.position().left + parseInt(elem.css('marginRight')) + elem.outerWidth() - $('.' + modalClass).outerWidth() + 'px', width: $('.' + modalClass).outerWidth() + 'px'});
-    } else if (placement == 'bottomCenter') {
+    } else if (_defaults.placement == 'bottomCenter') {
       $('.' + modalClass).css({left: elem.position().left + parseInt(elem.css('marginRight')) + (elem.outerWidth() - $('.' + modalClass).outerWidth()) / 2 + 'px', width: $('.' + modalClass).outerWidth() + 'px'});
     }
-    if (overflowContent) {
+    if (_defaults.overflowContent) {
       $('.' + modalClass).append($('.' + modalClass).find('.' + modalClass + '_content .' + modalClass + '_footer'));
     }
 
@@ -97,15 +100,22 @@ function popModal(elem, html, params, okFun, cancelFun, onLoad, onClose) {
   });
 
   $('.popModal [data-popmodal="ok"]').bind('click', function (event) {
-    var ok = okFun ? okFun(event) : true;
+    var ok;
+    if (okFun && $.isFunction(okFun)) {
+      ok = okFun(event);
+    } else {
+      ok = _defaults.okFun();
+    }
     if (ok !== false) {
       popModalClose();
     }
   });
 
   $('.popModal [data-popmodal="cancel"]').bind('click', function () {
-    if (cancelFun) {
+    if (cancelFun && $.isFunction(cancelFun)) {
       cancelFun();
+    } else {
+      _defaults.cancelFun();
     }
     popModalClose();
   });
